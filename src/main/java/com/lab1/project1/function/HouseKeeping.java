@@ -36,21 +36,15 @@ public class HouseKeeping {
                     commandType = CommandType.Text,
                     connectionStringSetting = "SqlConnectionString")
             UploadLog[] result,
-
-            @HttpTrigger(
-                    name = "req",
-                    methods = {HttpMethod.POST},
-                    authLevel = AuthorizationLevel.FUNCTION)
-            HttpRequestMessage<Optional<String>> request,
-
             final ExecutionContext context
     ) {
         Logger log = context.getLogger();
-        if (request == null ) {
-            log.info(context.getFunctionName() + ">>> Timer trigger function executed at: " + LocalDateTime.now());
-        } else {
-            log.info(context.getFunctionName() + ">>> Http trigger function executed at: " + LocalDateTime.now());
-        }
+        log.info(context.getFunctionName() + ">>> Timer trigger function executed at: " + LocalDateTime.now());
+        houseKeepingUploadFiles(result, context);
+    }
+
+    public int houseKeepingUploadFiles(UploadLog[] result, ExecutionContext context) {
+        Logger log = context.getLogger();
         String storageConnString = System.getenv("StorageConnectionString");
         log.info(context.getFunctionName() + ">>> StorageConnectionString=" + storageConnString);
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().connectionString(storageConnString)
@@ -69,6 +63,7 @@ public class HouseKeeping {
             }
         }
         log.info(context.getFunctionName() + ">>> is completed, deleted " + count + " files!!!");
+        return count;
     }
 
 }
