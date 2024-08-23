@@ -5,12 +5,17 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.microsoft.azure.functions.ExecutionContext;
+import com.microsoft.azure.functions.HttpMethod;
+import com.microsoft.azure.functions.HttpRequestMessage;
+import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
+import com.microsoft.azure.functions.annotation.HttpTrigger;
 import com.microsoft.azure.functions.annotation.TimerTrigger;
 import com.microsoft.azure.functions.sql.annotation.CommandType;
 import com.microsoft.azure.functions.sql.annotation.SQLInput;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -32,10 +37,20 @@ public class HouseKeeping {
                     connectionStringSetting = "SqlConnectionString")
             UploadLog[] result,
 
+            @HttpTrigger(
+                    name = "req",
+                    methods = {HttpMethod.POST},
+                    authLevel = AuthorizationLevel.FUNCTION)
+            HttpRequestMessage<Optional<String>> request,
+
             final ExecutionContext context
     ) {
         Logger log = context.getLogger();
-        log.info(context.getFunctionName() + ">>> Timer trigger function executed at: " + LocalDateTime.now());
+        if (request == null ) {
+            log.info(context.getFunctionName() + ">>> Timer trigger function executed at: " + LocalDateTime.now());
+        } else {
+            log.info(context.getFunctionName() + ">>> Http trigger function executed at: " + LocalDateTime.now());
+        }
         String storageConnString = System.getenv("StorageConnectionString");
         log.info(context.getFunctionName() + ">>> StorageConnectionString=" + storageConnString);
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().connectionString(storageConnString)
@@ -43,7 +58,7 @@ public class HouseKeeping {
         String blobContainer = "myblobs";
         BlobContainerClient blobContainerClient = blobServiceClient.getBlobContainerClient(blobContainer);
         int count = 0;
-        log.info(context.getFunctionName() + ">>> Timer trigger function found " + result.length + " files to be deleted!!!");
+        log.info(context.getFunctionName() + ">>> Found " + result.length + " files to be deleted!!!");
         for (UploadLog f : result) {
             String filename = f.getBlobName();
             BlobClient blobClient = blobContainerClient.getBlobClient(filename);
@@ -53,6 +68,7 @@ public class HouseKeeping {
                 log.info(context.getFunctionName() + ">>> Deleted blob file: " + blobContainer + "/" + filename);
             }
         }
-        log.info(context.getFunctionName() + ">>> Timer trigger function complete, delete " + count + " files!!!");
+        log.info(context.getFunctionName() + ">>> is completed, deleted " + count + " files!!!");
     }
+
 }
