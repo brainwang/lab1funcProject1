@@ -1,7 +1,5 @@
 package com.lab1.project1.function;
 
-import com.azure.identity.DefaultAzureCredential;
-import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
@@ -11,7 +9,11 @@ import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -38,7 +40,32 @@ public class Function {
         final String name = request.getBody().orElse(query);
         //Test Body
         Logger log = context.getLogger();
-        DefaultAzureCredential defaultCredential = new DefaultAzureCredentialBuilder().build();
+        //testBlob(log);
+        testJdbc(log);
+        //
+        if (name == null) {
+            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
+        } else {
+            return request.createResponseBuilder(HttpStatus.OK).body("Hello, " + name).build();
+        }
+    }
+
+    private void testJdbc(Logger log) {
+        //JDBC (Microsoft Entra integrated authentication)
+        //jdbc:sqlserver://lab1-sql.database.windows.net:1433;database=db1;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;Authentication=ActiveDirectoryIntegrated
+        String jdbcConnString = System.getenv("JdbcConnectionString");
+        log.info("Connecting to the database with: " + jdbcConnString);
+        try {
+            Connection connection = DriverManager.getConnection(jdbcConnString);
+            log.info("Database connection test: " + connection.getCatalog());
+            connection.close();
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "JDBC Exception: " + e.getMessage(), e);
+        }
+    }
+
+    private void testBlob(Logger log) {
+        //DefaultAzureCredential defaultCredential = new DefaultAzureCredentialBuilder().build();
         String storageConnString = System.getenv("StorageConnectionString");
         log.info("StorageConnectionString=" + storageConnString);
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder().connectionString(storageConnString)
@@ -51,11 +78,5 @@ public class Function {
         log.info("Get client by file name:" + filename + "=" + blobClient);
         boolean deleted = blobClient.deleteIfExists();
         log.info("Delete blob file: " + blobContainer + "/" + filename + "=" + deleted);
-        //
-        if (name == null) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
-        } else {
-            return request.createResponseBuilder(HttpStatus.OK).body("Hello, " + name).build();
-        }
     }
 }
