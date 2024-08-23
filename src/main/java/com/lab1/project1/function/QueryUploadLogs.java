@@ -21,7 +21,7 @@ public class QueryUploadLogs {
                 HttpRequestMessage<Optional<String>> request,
             @SQLInput(
                 name = "result",
-                commandText = "SELECT * FROM UploadLog WHERE CreateTime <= CONVERT(DATE, @DateString)",
+                commandText = "SELECT * FROM UploadLog WHERE CreateTime >= CONVERT(DATE, @DateString)",
                 parameters = "@DateString={Query.date}",
                 commandType = CommandType.Text,
                 connectionStringSetting = "SqlConnectionString")
