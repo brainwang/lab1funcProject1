@@ -30,7 +30,7 @@ public class QueryUploadLogs {
     ) {
         Logger log=context.getLogger();
         final String date = request.getQueryParameters().get("date");
-        log.info("QueryUploadLogs query logs before date : " + date);
+        log.info("QueryUploadLogs query logs after date : " + date);
         return request.createResponseBuilder(HttpStatus.OK).header("Content-Type", "application/json").body(result).build();
     }
 }
