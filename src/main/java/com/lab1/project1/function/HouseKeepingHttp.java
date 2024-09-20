@@ -17,7 +17,8 @@ import java.util.logging.Logger;
 public class HouseKeepingHttp {
     @FunctionName("HouseKeepingHttp")
     public HttpResponseMessage run(
-            @HttpTrigger(name = "req", methods = {HttpMethod.GET, HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION)
+            @HttpTrigger(name = "req", methods = {HttpMethod.GET, HttpMethod.POST},
+                    authLevel = AuthorizationLevel.FUNCTION)
             HttpRequestMessage<Optional<String>> request,
             @SQLInput(
                     name = "result",
